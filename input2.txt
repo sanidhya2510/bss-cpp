@@ -1,0 +1,7 @@
+begin process p1
+recv_B p2 m1
+end process p1
+
+begin process p2
+send m1
+end process p2

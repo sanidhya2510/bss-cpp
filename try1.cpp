@@ -21,7 +21,6 @@ class Process {
     vector<int>vector_clock;
     vector<string>operation;
     vector<Message*> delayed_message_queue;
-    map<Message*, vector<int>> send_buffer;
     vector<string>final_operations;
     Process(string name, int num);
 };
@@ -81,10 +80,15 @@ void parseInput(string filename, map<string, Process*> & process_list, int num){
 }
 
 
-void BSS(map<string, Process*> &process_list, map<string, Message*> &message_list, set<string> &sent_messages){
+void BSS(map<string, Process*> &process_list, map<string, Message*> &message_list, map<string, string> &sent_messages){
     int break_counter = 0;
+    set<Process*>unfinished_processes;
+    set<Process*>stuck_processes;
+    Process* last_stuck_process = nullptr;
+    for(auto it = process_list.begin(); it!=process_list.end(); it++){
+        unfinished_processes.insert(it->second);
+    }
     while(break_counter < process_list.size()){
-        int stuck_counter = 0;
         for(auto it = process_list.begin(); it!=process_list.end(); it++){
             Process* current_process = it->second;
             // cout<<current_process->pid<<endl;
@@ -100,8 +104,11 @@ void BSS(map<string, Process*> &process_list, map<string, Message*> &message_lis
                     ss >> temp >> message;
                     Message* new_message = new Message(message, current_process);
                     message_list[message] = new_message;
-                    current_process->send_buffer[new_message] = new_message->timestamp;
-                    sent_messages.insert(message);
+                    if(sent_messages.find(message) != sent_messages.end()){
+                        cout<<"Error 1\n";
+                        exit(0);
+                    }
+                    sent_messages.insert({message, "p"+to_string(current_process->pid+1)});
                     // cout<<"Message sent\n";
                     current_process->current_task++;
                     current_process->final_operations.push_back(operation.append(" ").append(vectorToString(new_message->timestamp)));
@@ -116,6 +123,10 @@ void BSS(map<string, Process*> &process_list, map<string, Message*> &message_lis
                     //     cout<<it<<endl;
                     // }
                     if(sent_messages.find(message) != sent_messages.end()){
+                        if(sent_messages[message] != process){
+                            cout<<"Error 2\n";
+                            exit(0);
+                        }
                         Message* received_message = message_list[message];
                         bool is_delivered = true;
                         // cout<<vectorToString(received_message->timestamp)<<endl;
@@ -134,6 +145,9 @@ void BSS(map<string, Process*> &process_list, map<string, Message*> &message_lis
                         current_process->final_operations.push_back(operation + " " + (vectorToString(current_process->vector_clock)));
                         if(is_delivered){
                             // cout<<"Message delivered\n";
+                            if(stuck_processes.find(current_process) != stuck_processes.end()){
+                                stuck_processes.erase(current_process);
+                            }
                             for(int i = 0; i < current_process->vector_clock.size(); i++){
                                 current_process->vector_clock[i] = max(current_process->vector_clock[i], received_message->timestamp[i]);
                             }
@@ -165,7 +179,7 @@ void BSS(map<string, Process*> &process_list, map<string, Message*> &message_lis
                                             current_process->vector_clock[i] = max(current_process->vector_clock[i], (*itr)->timestamp[i]);
                                         }
                                         string new_receive_string = "recv_A ";
-                                        current_process->final_operations.push_back(new_receive_string.append("m" + to_string((*itr)->message_id) + " " + it->first) + (" ") + vectorToString(current_process->vector_clock));
+                                        current_process->final_operations.push_back(new_receive_string.append("p" + to_string((*itr)->sender->pid + 1) + " " + "m" + to_string((*itr)->message_id) + (" ") + vectorToString(current_process->vector_clock)));
                                         current_process->delayed_message_queue.erase(itr);
                                         break;
                                     }
@@ -190,16 +204,21 @@ void BSS(map<string, Process*> &process_list, map<string, Message*> &message_lis
 
                     else {
                         // cout<<"Message not found\n";
-                        stuck_counter++;
-                        if(stuck_counter == process_list.size()){
-                            cout<<"Deadlock detected\n";
+                        if(stuck_processes == unfinished_processes && last_stuck_process == current_process){
+                            cout<<"Error 3\n";
                             exit(0);
+                        }
+
+                        else if(stuck_processes.find(current_process) == stuck_processes.end()){
+                            stuck_processes.insert(current_process);
+                            last_stuck_process = current_process;
                         }
                         break;
                     }
                 }
 
                 else if(operation.find("end") != string::npos){
+                    unfinished_processes.erase(current_process);
                     break_counter++;
                     break;
                 }
@@ -213,7 +232,7 @@ int main(){
     string filename = "input6.txt";
     map<string, Process*> process_list;
     map<string, Message*> message_list;
-    set<string> sent_messages;
+    map<string, string> sent_messages;
     parseInput(filename, process_list, num);
     // cout<<"Parsed input\n";
     BSS(process_list, message_list, sent_messages);

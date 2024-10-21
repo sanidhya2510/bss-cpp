@@ -1,6 +1,6 @@
 begin process p1
 send m1
-end process
+end process p1
 begin process p2
 recv_B p1 m1
 send m2

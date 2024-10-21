@@ -68,8 +68,10 @@ end process p4
 
 
 ## How to Run
+1. **Modify the main function**:  
+   Edit the number of processes and the input file name.
 
-1. **Compile the code**:
+2. **Compile the code**:
 
    Run the following command to compile the C++ program:
    ```bash

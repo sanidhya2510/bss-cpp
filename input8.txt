@@ -1,0 +1,16 @@
+begin process p1
+send m1
+send m2
+send m3
+end process p1
+begin process p2
+recv_B p1 m1
+send m4
+end process p2
+begin process p3
+recv_B p1 m2
+recv_B p2 m4
+end process p3
+begin process p4
+recv_B p1 m3
+end process p4

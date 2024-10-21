@@ -22,48 +22,48 @@ For each process, the program outputs the sequence of operations along with the 
 ## Example
 
 ### Input:
-begin process p1
-send m1
-send m2
-send m3
-end process p1
+begin process p1  
+send m1  
+send m2  
+send m3  
+end process p1  
+  
+begin process p2  
+recv_B p1 m1  
+send m4  
+end process p2  
 
-begin process p2
-recv_B p1 m1
-send m4
-end process p2
+begin process p3  
+recv_B p1 m2  
+recv_B p2 m4  
+end process p3  
 
-begin process p3
-recv_B p1 m2
-recv_B p2 m4
-end process p3
-
-begin process p4
-recv_B p1 m3
-end process p4
+begin process p4  
+recv_B p1 m3  
+end process p4  
 
 ### Output:
 
-begin process p1:
-send m1 [1 0 0 0]
-send m2 [2 0 0 0]
-send m3 [3 0 0 0]
-end process p1
+begin process p1:  
+send m1 [1 0 0 0]  
+send m2 [2 0 0 0]  
+send m3 [3 0 0 0]  
+end process p1  
+  
+begin process p2:  
+recv_B p1 m1 [0 0 0 0]  
+recv_A p1 m1 [1 0 0 0]  
+send m4 [1 1 0 0]  
+end process p2  
 
-begin process p2:
-recv_B p1 m1 [0 0 0 0]
-recv_A p1 m1 [1 0 0 0]
-send m4 [1 1 0 0]
-end process p2
+begin process p3:  
+recv_B p1 m2 [0 0 0 0]  
+recv_B p2 m4 [0 0 0 0]  
+end process p3  
 
-begin process p3:
-recv_B p1 m2 [0 0 0 0]
-recv_B p2 m4 [0 0 0 0]
-end process p3
-
-begin process p4:
-recv_B p1 m3 [0 0 0 0]
-end process p4
+begin process p4:  
+recv_B p1 m3 [0 0 0 0]  
+end process p4  
 
 
 
